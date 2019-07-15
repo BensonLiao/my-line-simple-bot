@@ -1,0 +1,7 @@
+{
+  "name": "My line simple bot",
+  "description": "A simple bot server for basic reply and imgur upload function",
+  "keywords": ["line-bot", "go", "sample", "example"],
+  "website": "http://github.com/BensonLiao/my-line-simple-bot",
+  "repository": "http://github.com/BensonLiao/my-line-simple-bot"
+}
