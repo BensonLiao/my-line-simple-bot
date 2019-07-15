@@ -11,7 +11,6 @@ import (
 
 	"github.com/BensonLiao/imgur-api-go-v3/imgurclient"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
@@ -223,15 +222,16 @@ func callbackFunc() gin.HandlerFunc {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file: %s", err)
-	}
-
 	channelSecret = os.Getenv("LINEBOT_CHANNEL_SECRET")
+	if channelSecret == "" {
+		log.Fatal("$LINEBOT_CHANNEL_SECRET must be set to enable linebot")
+	}
 	channelToken = os.Getenv("LINEBOT_CHANNEL_TOKEN")
 	imgurClientID = os.Getenv("IMGUR_CLIENT_ID")
 	imgurClientSecret = os.Getenv("IMGUR_CLIENT_SECRET")
+	if imgurClientSecret == "" {
+		log.Fatal("$IMGUR_CLIENT_SECRET must be set to use imgur api")
+	}
 
 	bot, err = linebot.New(
 		channelSecret,

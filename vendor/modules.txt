@@ -9,8 +9,6 @@ github.com/gin-gonic/gin/internal/json
 github.com/gin-gonic/gin/render
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
-# github.com/joho/godotenv v1.3.0
-github.com/joho/godotenv
 # github.com/json-iterator/go v1.1.6
 github.com/json-iterator/go
 # github.com/line/line-bot-sdk-go v6.3.0+incompatible
