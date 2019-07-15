@@ -102,6 +102,7 @@ func callbackFunc() gin.HandlerFunc {
 			"",
 			"",
 		)
+		log.Println(c.Request)
 		events, err := bot.ParseRequest(c.Request)
 		if err != nil {
 			if err == linebot.ErrInvalidSignature {
