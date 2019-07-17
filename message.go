@@ -149,11 +149,7 @@ func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID str
 		log.Printf("image upload result: %s", string(imgUploadData))
 
 		// Call Line API to get LIFF URL
-		preview := linebot.View{
-			Type: linebot.LIFFViewTypeTall,
-			URL:  imgUploadRes.Data.Link,
-		}
-		lineLIFFAddRes, err := bot.AddLIFF(preview).Do()
+		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgUploadRes.Data.Link)
 		if err != nil {
 			log.Print(err)
 		}

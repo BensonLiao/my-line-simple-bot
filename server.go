@@ -248,12 +248,8 @@ func Callback(c *gin.Context) {
 			// Delete LIFF App URL from LINE
 			value, ok = postbackParams["liffid"]
 			if ok {
-				liffDeleteRes, err := bot.DeleteLIFF(value).Do()
-				if err != nil {
+				if err := DeleteLIFFApp(value); err != nil {
 					log.Print(err)
-				}
-				if liffDeleteRes != nil {
-					log.Println("Delete LIFF App URL success!")
 				}
 			}
 		default:
