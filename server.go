@@ -107,6 +107,9 @@ func HandleImage(message *linebot.ImageMessage, replyToken string, source *lineb
 
 // HandleFile func
 func HandleFile(message *linebot.FileMessage, replyToken string) error {
+	if lastBotMessages != "" {
+		return ReplyTextMessage(replyToken, replyTextMessage)
+	}
 	return ReplyTextMessage(replyToken,
 		fmt.Sprintf(
 			"File `%s` (%d bytes) received.",
@@ -116,6 +119,9 @@ func HandleFile(message *linebot.FileMessage, replyToken string) error {
 
 // HandleLocation func
 func HandleLocation(message *linebot.LocationMessage, replyToken string) error {
+	if lastBotMessages != "" {
+		return ReplyTextMessage(replyToken, replyTextMessage)
+	}
 	if _, err := bot.ReplyMessage(
 		replyToken,
 		linebot.NewLocationMessage(message.Title, message.Address, message.Latitude, message.Longitude),
@@ -131,16 +137,14 @@ func HandleLocation(message *linebot.LocationMessage, replyToken string) error {
 func HandleSticker(message *linebot.StickerMessage, replyToken string) error {
 	// There's a linebot api 400 error if reply sticker that same as user sent
 	// are not available
+	if lastBotMessages != "" {
+		return ReplyTextMessage(replyToken, replyTextMessage)
+	}
 	mySticker := GetRandomSticker()
-	if err := ReplyStickerMessage(
+	return ReplyStickerMessage(
 		replyToken,
 		mySticker.PackageID,
-		mySticker.StickerID); err != nil {
-		return fmt.Errorf(
-			"[HandleSticker] error in calling ReplyStickerMessage: %v",
-			err)
-	}
-	return nil
+		mySticker.StickerID)
 }
 
 // HandleText func
@@ -149,34 +153,22 @@ func HandleText(message *linebot.TextMessage, replyToken string, source *linebot
 	case "give me brown":
 		fallthrough
 	case "給我熊大":
-		if err := ReplyStickerMessage(
+		return ReplyStickerMessage(
 			replyToken,
 			brownSaluteSticker.PackageID,
-			brownSaluteSticker.StickerID); err != nil {
-			return fmt.Errorf(
-				"[HandleText] error in calling ReplyStickerMessage: %v",
-				err)
-		}
+			brownSaluteSticker.StickerID)
 	case "search imgur account":
 		fallthrough
 	case "搜尋imgur帳號":
-		replyTextMessage = "請問您要找的帳號為?"
+		replyTextMessage = "請問您要找的帳號是?"
 		lastBotMessages = replyTextMessage
-		if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
-			return fmt.Errorf(
-				"[HandleText] error in calling ReplyTextMessage: %v",
-				err)
-		}
+		return ReplyTextMessage(replyToken, replyTextMessage)
 	case "upload image to imgur":
 		fallthrough
 	case "上傳圖片到imgur":
 		replyTextMessage = "請問您要上傳哪張圖片?"
 		lastBotMessages = replyTextMessage
-		if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
-			return fmt.Errorf(
-				"[HandleText] error in calling ReplyTextMessage: %v",
-				err)
-		}
+		return ReplyTextMessage(replyToken, replyTextMessage)
 	case "刪除上傳的圖片":
 		break
 	default:

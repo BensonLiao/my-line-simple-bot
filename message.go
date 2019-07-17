@@ -82,6 +82,7 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 	log.Println("message.Text" + message.Text)
 	switch lastBotMessages {
 	case "請問您要找的帳號是?":
+		lastBotMessages = ""
 		//Get account info and send to reply message
 		accountID := "BensonLiao"
 		if message.Text != "" {
@@ -121,7 +122,6 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 			log.Print(err)
 		}
 	}
-	lastBotMessages = ""
 }
 
 // ActionsOnImageMessage func, to do specific action depend on message received and the last bot sent image message.
@@ -129,6 +129,7 @@ func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID str
 	log.Println("message.ID" + message.ID)
 	switch lastBotMessages {
 	case "請問您要上傳哪張圖片?":
+		lastBotMessages = ""
 		res, err := bot.GetMessageContent(message.ID).Do()
 		if err != nil {
 			log.Print(err)
@@ -191,5 +192,4 @@ func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID str
 		}
 		log.Printf("bodyGot's type: %T\n", bodyGot)
 	}
-	lastBotMessages = ""
 }
