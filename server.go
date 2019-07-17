@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -74,70 +72,22 @@ func SplitHTTPReqParams(params string) map[string]string {
 	return keyMaps
 }
 
-//Get account info from imgur.com and return jsonfy string
-func getImgurAccInfo(accID string) (info string, err error) {
-	req, err := http.NewRequest("GET", "https://api.imgur.com/3/account/"+accID, nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Client-ID "+imgurClientID)
-	//Make sure no hanging request
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	client := &http.Client{}
-	resp, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		return "抱歉!找不到這位使用者", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	log.Print(string(body))
-	return string(body), nil
-}
-
-//Upload an image to imgur.com and return upload result
-func uploadToImgur(img []uint8) (result string, err error) {
-	req, err := http.NewRequest("POST", "https://api.imgur.com/3/image", nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Client-ID "+imgurClientID)
-	//Make sure no hanging request
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	client := &http.Client{}
-	resp, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	log.Print(string(body))
-	return string(body), nil
-}
-
 // ReplyTextMessage func
 func ReplyTextMessage(replyToken, text string) error {
 	if _, err := bot.ReplyMessage(
 		replyToken,
 		linebot.NewTextMessage(text),
 	).Do(); err != nil {
-		return err
+		return fmt.Errorf(
+			"[ReplyTextMessage] error in calling bot.ReplyMessage: %v",
+			err)
 	}
 	return nil
 }
 
 // ReplyStickerMessage func
 func ReplyStickerMessage(replyToken, packgeID, stickerID string) error {
-	log.Printf("replyToken: %s, packgeID: %s, stickerID: %s", replyToken, packgeID, stickerID)
+	log.Printf("packgeID: %s, stickerID: %s", packgeID, stickerID)
 	if _, err := bot.ReplyMessage(
 		replyToken,
 		linebot.NewStickerMessage(packgeID, stickerID),
@@ -151,21 +101,7 @@ func ReplyStickerMessage(replyToken, packgeID, stickerID string) error {
 
 // HandleImage func
 func HandleImage(message *linebot.ImageMessage, replyToken string, source *linebot.EventSource) error {
-	if lastBotMessages == "" {
-		res, err := bot.GetMessageContent(message.ID).Do()
-		if err != nil {
-			return err
-		}
-		body := res.Content
-		defer body.Close()
-		bodyGot, err := ioutil.ReadAll(body)
-		if err != nil {
-			return err
-		}
-		log.Printf("bodyGot's type: %T\n", bodyGot)
-	} else {
-		ActionsOnBotMessage(message.ID, replyToken, source.UserID)
-	}
+	ActionsOnImageMessage(message, replyToken, source.UserID)
 	return nil
 }
 
@@ -184,7 +120,9 @@ func HandleLocation(message *linebot.LocationMessage, replyToken string) error {
 		replyToken,
 		linebot.NewLocationMessage(message.Title, message.Address, message.Latitude, message.Longitude),
 	).Do(); err != nil {
-		return err
+		return fmt.Errorf(
+			"[HandleLocation] error in calling bot.ReplyMessage: %v",
+			err)
 	}
 	return nil
 }
@@ -215,7 +153,9 @@ func HandleText(message *linebot.TextMessage, replyToken string, source *linebot
 			replyToken,
 			brownSaluteSticker.PackageID,
 			brownSaluteSticker.StickerID); err != nil {
-			return err
+			return fmt.Errorf(
+				"[HandleText] error in calling ReplyStickerMessage: %v",
+				err)
 		}
 	case "search imgur account":
 		fallthrough
@@ -223,7 +163,9 @@ func HandleText(message *linebot.TextMessage, replyToken string, source *linebot
 		replyTextMessage = "請問您要找的帳號為?"
 		lastBotMessages = replyTextMessage
 		if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
-			return err
+			return fmt.Errorf(
+				"[HandleText] error in calling ReplyTextMessage: %v",
+				err)
 		}
 	case "upload image to imgur":
 		fallthrough
@@ -231,21 +173,14 @@ func HandleText(message *linebot.TextMessage, replyToken string, source *linebot
 		replyTextMessage = "請問您要上傳哪張圖片?"
 		lastBotMessages = replyTextMessage
 		if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
-			log.Print(err)
+			return fmt.Errorf(
+				"[HandleText] error in calling ReplyTextMessage: %v",
+				err)
 		}
 	case "刪除上傳的圖片":
 		break
 	default:
-		if lastBotMessages == "" {
-			contents := GetDefaultBotMessage(message.Text)
-			if _, err = bot.ReplyMessage(
-				replyToken,
-				linebot.NewFlexMessage("Hello, World!", contents)).Do(); err != nil {
-				return err
-			}
-		} else {
-			ActionsOnBotMessage(message.Text, replyToken, source.UserID)
-		}
+		ActionsOnTextMessage(message, replyToken, source.UserID)
 	}
 	return nil
 }

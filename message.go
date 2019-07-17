@@ -77,15 +77,15 @@ func GetImageUploadBotMessage(liffID, deleteHash string) *linebot.BubbleContaine
 	}
 }
 
-// ActionsOnBotMessage func, to do specific action depend on message received and the last bot sent message
-func ActionsOnBotMessage(actionMessage, replyToken, userID string) {
-	log.Println("actionMessage" + actionMessage)
+// ActionsOnTextMessage func, to do specific action depend on message received and the last bot sent text message.
+func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID string) {
+	log.Println("message.Text" + message.Text)
 	switch lastBotMessages {
-	case "請問您要找的帳號為?":
+	case "請問您要找的帳號是?":
 		//Get account info and send to reply message
 		accountID := "BensonLiao"
-		if actionMessage != "" {
-			accountID = actionMessage
+		if message.Text != "" {
+			accountID = message.Text
 		}
 		accountRes, err := imgurClient.GetAccount(accountID)
 		if err != nil {
@@ -108,8 +108,28 @@ func ActionsOnBotMessage(actionMessage, replyToken, userID string) {
 			linebot.NewTextMessage("找到"+accountID+"了~\n"+string(accountData))).Do(); err != nil {
 			log.Print(err)
 		}
+	default:
+		if lastBotMessages != "" {
+			if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
+				log.Print(err)
+			}
+		}
+		contents := GetDefaultBotMessage(message.Text)
+		if _, err = bot.ReplyMessage(
+			replyToken,
+			linebot.NewFlexMessage("Hello, World!", contents)).Do(); err != nil {
+			log.Print(err)
+		}
+	}
+	lastBotMessages = ""
+}
+
+// ActionsOnImageMessage func, to do specific action depend on message received and the last bot sent image message.
+func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID string) {
+	log.Println("message.ID" + message.ID)
+	switch lastBotMessages {
 	case "請問您要上傳哪張圖片?":
-		res, err := bot.GetMessageContent(actionMessage).Do()
+		res, err := bot.GetMessageContent(message.ID).Do()
 		if err != nil {
 			log.Print(err)
 		}
@@ -130,10 +150,6 @@ func ActionsOnBotMessage(actionMessage, replyToken, userID string) {
 			log.Print(err)
 		}
 		log.Printf("image upload result: %s", string(imgUploadData))
-		// Push a text message for user to copy or share
-		if _, err = bot.PushMessage(userID, linebot.NewTextMessage(imgUploadRes.Data.Link)).Do(); err != nil {
-			log.Print(err)
-		}
 
 		// Call Line API to get LIFF URL
 		preview := linebot.View{
@@ -144,16 +160,36 @@ func ActionsOnBotMessage(actionMessage, replyToken, userID string) {
 		if err != nil {
 			log.Print(err)
 		}
-		// Send flex message to show result and furthur actions
-		// Note. flex message are not allow to be copy by user currently,
+		// Send flex message to show result and furthur actions.
+		// But flex message are not allow to be copy by user currently,
 		// and if we send another message by push it will be charged
-		// when over 500 messages per month.
-		// So using flex message by reply and let user copy image url
-		// by linking to imgur.com and done with native browser just for now.
+		// when over 500 messages per month under FREE plan.
+		// So if you want to save money for your bot,
+		// sending multiple messages(up to 5) in 1 reply.
 		flexContent := GetImageUploadBotMessage(lineLIFFAddRes.LIFFID, imgUploadRes.Data.DeleteHash)
-		if _, err = bot.ReplyMessage(replyToken, linebot.NewFlexMessage("您的圖片連結: "+imgUploadRes.Data.Link, flexContent)).Do(); err != nil {
+		if _, err = bot.ReplyMessage(
+			replyToken,
+			linebot.NewTextMessage(imgUploadRes.Data.Link),
+			linebot.NewFlexMessage("您的圖片連結: "+imgUploadRes.Data.Link, flexContent)).Do(); err != nil {
 			log.Print(err)
 		}
+	default:
+		if lastBotMessages != "" {
+			if err := ReplyTextMessage(replyToken, replyTextMessage); err != nil {
+				log.Print(err)
+			}
+		}
+		res, err := bot.GetMessageContent(message.ID).Do()
+		if err != nil {
+			log.Print(err)
+		}
+		body := res.Content
+		defer body.Close()
+		bodyGot, err := ioutil.ReadAll(body)
+		if err != nil {
+			log.Print(err)
+		}
+		log.Printf("bodyGot's type: %T\n", bodyGot)
 	}
 	lastBotMessages = ""
 }
