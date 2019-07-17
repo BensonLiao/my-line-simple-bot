@@ -23,10 +23,6 @@ func GetDefaultBotMessage(userMessage string) *linebot.BubbleContainer {
 				},
 				&linebot.TextComponent{
 					Type: linebot.FlexComponentTypeText,
-					Text: "World!",
-				},
-				&linebot.TextComponent{
-					Type: linebot.FlexComponentTypeText,
 					Size: linebot.FlexTextSizeTypeLg,
 					Text: "您剛剛說:[" + userMessage + "]",
 				},
