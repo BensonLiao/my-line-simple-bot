@@ -204,11 +204,23 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 		log.Println(string(accountData))
 		// Call Line API to get LIFF App or update it
 		imgurGalleriesLink := imgurGalleriesURLBase + tag
-		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgurGalleriesLink)
+		lineLIFFID, err := GetLIFFAppID(imgurGalleriesLink)
 		if err != nil {
 			log.Print(err)
 		}
-		flexContent := GetDefaulLIFFBotMessage(lineLIFFAddRes.LIFFID, "預覽分類圖庫")
+		if lineLIFFID == "" {
+			lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgurGalleriesLink)
+			if err != nil {
+				log.Print(err)
+			}
+			lineLIFFID = lineLIFFAddRes.LIFFID
+		} else if _, err := UpdateLIFFApp(
+			linebot.LIFFViewTypeTall,
+			lineLIFFID,
+			imgurGalleriesLink); err != nil {
+			log.Print(err)
+		}
+		flexContent := GetDefaulLIFFBotMessage(lineLIFFID, "預覽分類圖庫")
 		if _, err = bot.ReplyMessage(
 			replyToken,
 			linebot.NewTextMessage("找到這個分類了~"),
