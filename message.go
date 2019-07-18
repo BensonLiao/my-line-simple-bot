@@ -33,12 +33,12 @@ func GetDefaultBotMessage(userMessage string) *linebot.BubbleContainer {
 				&linebot.TextComponent{
 					Type: linebot.FlexComponentTypeText,
 					Size: linebot.FlexTextSizeTypeLg,
-					Text: "您剛剛說:[" + userMessage + "]",
+					Text: "您剛剛說: " + userMessage,
 				},
 				&linebot.ButtonComponent{
 					Type:   linebot.FlexComponentTypeButton,
 					Style:  linebot.FlexButtonStyleTypePrimary,
-					Action: linebot.NewURIAction("See my bot actions", lineLIFFURLBotActions),
+					Action: linebot.NewURIAction("看看我能為你/妳做什麼~", lineLIFFURLBotActions),
 				},
 			},
 		},
