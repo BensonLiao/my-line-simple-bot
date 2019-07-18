@@ -7,6 +7,13 @@ type Response struct {
 	Status  int          `json:"status"`
 }
 
+// DataListResponse type
+type DataListResponse struct {
+	Data    []ResponseData `json:"data"`
+	Success bool           `json:"success"`
+	Status  int            `json:"status"`
+}
+
 // ResponseData type
 type ResponseData struct {
 	ID          string      `json:"id"`

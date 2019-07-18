@@ -1,4 +1,4 @@
-# github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190711070218-a64b2d67dad3
+# github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190718060520-19c70abd4fba
 github.com/BensonLiao/imgur-api-go-v3/imgurclient
 # github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3
 github.com/gin-contrib/sse

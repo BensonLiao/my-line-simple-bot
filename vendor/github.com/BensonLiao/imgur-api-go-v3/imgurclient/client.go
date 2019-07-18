@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 )
 
 // Client for imgur api
@@ -28,9 +27,6 @@ type Client struct {
 // APIBase const, base of imgur api endpoint
 const APIBase = "https://api.imgur.com/3"
 
-// ImageBase const, imgur' image related api endpoint
-const ImageBase = APIBase + "/image"
-
 // Auth const, imgur api endpoint to get authorized token
 const Auth = "https://api.imgur.com/oauth2/authorize"
 
@@ -45,81 +41,6 @@ func New(key, secret, accessToken, refreshToken string) *Client {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
-}
-
-// AnonymousUpload func, do anonymous upload without authorize
-// by access file resource path
-func (cl Client) AnonymousUpload(path string) (Response, error) {
-	var err error
-	ir := Response{}
-	req, err := cl.newFileUploadRequest(
-		ImageBase,
-		nil,
-		"image",
-		"./test.png",
-	)
-	authHeader := []string{"Client-ID " + cl.ClientID}
-	req.Header.Add("Authorization", strings.Join(authHeader, " "))
-	response, err := cl.Do(req)
-	if err != nil {
-		return ir, err
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-
-	err = json.Unmarshal(body, &ir)
-	if err != nil {
-		return ir, err
-	}
-	return ir, err
-}
-
-// AnonymousUploadByImgMessage func, do anonymous upload without authorize
-// by read binary file content with format base64
-func (cl Client) AnonymousUploadByImgMessage(content []byte) (Response, error) {
-	var err error
-	ir := Response{}
-	req, err := cl.newImgContentUploadRequest(
-		ImageBase,
-		nil,
-		content,
-		"image",
-	)
-	authHeader := []string{"Client-ID " + cl.ClientID}
-	req.Header.Add("Authorization", strings.Join(authHeader, " "))
-	response, err := cl.Do(req)
-	if err != nil {
-		return ir, err
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-
-	err = json.Unmarshal(body, &ir)
-	if err != nil {
-		return ir, err
-	}
-	return ir, err
-}
-
-// DeleteAnonymousUploadedImg func, delete uploaded imgur image
-func (cl Client) DeleteAnonymousUploadedImg(deleteHash string) (DeleteResponse, error) {
-	var err error
-	ir := DeleteResponse{}
-	req, err := http.NewRequest("DELETE", ImageBase+"/"+deleteHash, nil)
-	authHeader := []string{"Client-ID " + cl.ClientID}
-	req.Header.Add("Authorization", strings.Join(authHeader, " "))
-	response, err := cl.Do(req)
-	if err != nil {
-		return ir, err
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-
-	err = json.Unmarshal(body, &ir)
-	if err != nil {
-		return ir, err
-	}
-	return ir, err
 }
 
 // GetAuthorizationURL func
@@ -176,19 +97,19 @@ func (cl *Client) Refresh() error {
 	return err
 }
 
-// prepareRequest func
-func (cl *Client) prepareRequest(method, uri string) (*http.Request, error) {
-	path := fmt.Sprintf("%s/%s", APIBase, uri)
-	fmt.Printf("req path: %s\n", path)
-	req, err := http.NewRequest(method, path, nil)
+// PrepareAuthRequest func, return a http request with Authorization header
+func (cl *Client) PrepareAuthRequest(method, url string) (*http.Request, error) {
+	fmt.Printf("req url: %s\n", url)
+	req, err := http.NewRequest(method, url, nil)
 	// fmt.Printf("client access token: %s\n", cl.AccessToken)
 	// req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", cl.AccessToken))
 	req.Header.Add("Authorization", fmt.Sprintf("Client-ID %s", cl.ClientID))
 	return req, err
 }
 
+// NewFileUploadRequest func,
 // Creates a new file upload http request with optional extra params
-func (cl *Client) newFileUploadRequest(
+func (cl *Client) NewFileUploadRequest(
 	uri string,
 	params map[string]string,
 	fileParam,
@@ -230,8 +151,9 @@ func (cl *Client) newFileUploadRequest(
 	return req, err
 }
 
+// NewImgContentUploadRequest func,
 // Creates a new image content upload http request with optional extra params
-func (cl *Client) newImgContentUploadRequest(
+func (cl *Client) NewImgContentUploadRequest(
 	uri string,
 	params map[string]string,
 	imgContent []byte,

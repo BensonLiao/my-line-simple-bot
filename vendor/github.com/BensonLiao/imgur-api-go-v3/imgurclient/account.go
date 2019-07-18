@@ -23,15 +23,18 @@ type AccountResponse struct {
 	Success bool    `json:"success"`
 }
 
+// AccountBase const, imgur's account related api endpoint
+const AccountBase = APIBase + "/account"
+
 // GetAccount func, send username and return Account
 func (cl *Client) GetAccount(username string) (AccountResponse, error) {
 	ar := AccountResponse{}
 	if username == "" {
 		username = "me"
-		// "me" Only works when cl.ClientID is valid and  imgur will search
+		// "me" Only works when cl.ClientID is valid and imgur will search
 		// for cl.ClientID's registered account
 	}
-	request, _ := cl.prepareRequest("GET", "account/"+username)
+	request, _ := cl.PrepareAuthRequest("GET", AccountBase+"/"+username)
 	response, err := cl.Do(request)
 	if err != nil {
 		fmt.Println(err)

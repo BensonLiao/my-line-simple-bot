@@ -1,5 +1,5 @@
-github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190711070218-a64b2d67dad3 h1:ThCdNs7YMWNdsOB2Jg3i0wOgkVIEsWZ3ONaQ/tOgy0U=
-github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190711070218-a64b2d67dad3/go.mod h1:JUGERBTKeU9Sz92FC6G60YfNIn87YaX+cKuQtxzLWt0=
+github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190718060520-19c70abd4fba h1:WZbMPxNB8VMtv/fp/q3P+/RZy5bA44z0853WwyHy1qQ=
+github.com/BensonLiao/imgur-api-go-v3 v0.0.0-20190718060520-19c70abd4fba/go.mod h1:JUGERBTKeU9Sz92FC6G60YfNIn87YaX+cKuQtxzLWt0=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3 h1:t8FVkw33L+wilf2QiWkw0UV77qRpcH/JHPKGpKa2E8g=

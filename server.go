@@ -35,11 +35,13 @@ var brownSaluteSticker = Sticker{
 var replyTextMessage = ""
 var lastBotMessages = ""
 var lineLIFFURLBase = "line://app/"
-var lineLIFFURL = lineLIFFURLBase + "1646605627-0bPlzl73"
+var lineLIFFURLBotActions = lineLIFFURLBase + "1646605627-0bPlzl73"
+var lineLIFFAppDuration = 6 * time.Minute
 var imgurClient *imgurclient.Client
 var imgurClientID = ""
 var imgurClientSecret = ""
-var imgurUserURL = "https://imgur.com/user/"
+var imgurUserURLBase = ".imgur.com"
+var imgurGalleriesURLBase = "https://imgur.com/t/"
 
 // GetRandomSticker func
 func GetRandomSticker() *Sticker {
@@ -161,6 +163,12 @@ func HandleText(message *linebot.TextMessage, replyToken string, source *linebot
 		fallthrough
 	case "搜尋imgur帳號":
 		replyTextMessage = "請問您要找的帳號是?"
+		lastBotMessages = replyTextMessage
+		return ReplyTextMessage(replyToken, replyTextMessage)
+	case "search imgur tag":
+		fallthrough
+	case "搜尋imgur分類":
+		replyTextMessage = "請問您要找的分類是?"
 		lastBotMessages = replyTextMessage
 		return ReplyTextMessage(replyToken, replyTextMessage)
 	case "upload image to imgur":

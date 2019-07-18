@@ -20,6 +20,7 @@ func DeleteLIFFApp(liffID string) error {
 
 // AddLIFFApp func
 func AddLIFFApp(viewType linebot.LIFFViewType, link string) (liffID *linebot.LIFFIDResponse, err error) {
+	log.Printf("LIFF URL: %v", link)
 	preview := linebot.View{
 		Type: viewType,
 		URL:  link,

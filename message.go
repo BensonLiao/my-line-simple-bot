@@ -2,11 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
+
+// GetFormatTime func
+func GetFormatTime(t time.Time) string {
+	return fmt.Sprintf("%d/%02d/%02d %02d:%02d:%02d",
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
+}
 
 // GetDefaultBotMessage func
 func GetDefaultBotMessage(userMessage string) *linebot.BubbleContainer {
@@ -29,7 +38,52 @@ func GetDefaultBotMessage(userMessage string) *linebot.BubbleContainer {
 				&linebot.ButtonComponent{
 					Type:   linebot.FlexComponentTypeButton,
 					Style:  linebot.FlexButtonStyleTypePrimary,
-					Action: linebot.NewURIAction("See my bot actions", lineLIFFURL),
+					Action: linebot.NewURIAction("See my bot actions", lineLIFFURLBotActions),
+				},
+			},
+		},
+	}
+}
+
+// GetDefaulTempLIFFBotMessage func
+func GetDefaulTempLIFFBotMessage(liffID, actionLabel, expireAt string) *linebot.BubbleContainer {
+	lineLIFFURLForImgurUser := lineLIFFURLBase + liffID
+	return &linebot.BubbleContainer{
+		Type: linebot.FlexContainerTypeBubble,
+		Body: &linebot.BoxComponent{
+			Type:    linebot.FlexComponentTypeBox,
+			Layout:  linebot.FlexBoxLayoutTypeVertical,
+			Spacing: linebot.FlexComponentSpacingTypeMd,
+			Contents: []linebot.FlexComponent{
+				&linebot.ButtonComponent{
+					Type:   linebot.FlexComponentTypeButton,
+					Style:  linebot.FlexButtonStyleTypePrimary,
+					Action: linebot.NewURIAction(actionLabel, lineLIFFURLForImgurUser),
+				},
+				&linebot.TextComponent{
+					Type: linebot.FlexComponentTypeText,
+					Text: "*預覽連結將於 " + expireAt + " 失效",
+					Wrap: true,
+				},
+			},
+		},
+	}
+}
+
+// GetDefaulLIFFBotMessage func
+func GetDefaulLIFFBotMessage(liffID, actionLabel string) *linebot.BubbleContainer {
+	lineLIFFURLForImgurUser := lineLIFFURLBase + liffID
+	return &linebot.BubbleContainer{
+		Type: linebot.FlexContainerTypeBubble,
+		Body: &linebot.BoxComponent{
+			Type:    linebot.FlexComponentTypeBox,
+			Layout:  linebot.FlexBoxLayoutTypeVertical,
+			Spacing: linebot.FlexComponentSpacingTypeMd,
+			Contents: []linebot.FlexComponent{
+				&linebot.ButtonComponent{
+					Type:   linebot.FlexComponentTypeButton,
+					Style:  linebot.FlexButtonStyleTypePrimary,
+					Action: linebot.NewURIAction(actionLabel, lineLIFFURLForImgurUser),
 				},
 			},
 		},
@@ -75,7 +129,7 @@ func GetImageUploadBotMessage(liffID, deleteHash string) *linebot.BubbleContaine
 
 // ActionsOnTextMessage func, to do specific action depend on message received and the last bot sent text message.
 func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID string) {
-	log.Println("message.Text" + message.Text)
+	log.Println("message.Text: " + message.Text)
 	switch lastBotMessages {
 	case "請問您要找的帳號是?":
 		lastBotMessages = ""
@@ -84,11 +138,11 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 		if message.Text != "" {
 			accountID = message.Text
 		}
-		accountRes, err := imgurClient.GetAccount(accountID)
+		imgurRes, err := imgurClient.GetAccount(accountID)
 		if err != nil {
 			log.Print(err)
 		}
-		if !accountRes.Success {
+		if !imgurRes.Success {
 			if _, err = bot.ReplyMessage(
 				replyToken,
 				linebot.NewTextMessage("抱歉，找不到"+accountID+"~:(")).Do(); err != nil {
@@ -96,13 +150,69 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 			}
 			break
 		}
-		accountData, err := json.MarshalIndent(accountRes.Data, "", "\t")
+		accountData, err := json.MarshalIndent(imgurRes.Data, "", "\t")
 		if err != nil {
 			log.Print(err)
 		}
+		log.Println(string(accountData))
+		// Call Line API to get LIFF App
+		imgurUserLink := "https://" + accountID + imgurUserURLBase
+		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgurUserLink)
+		if err != nil {
+			log.Print(err)
+		}
+		expiredAt := time.Now().Add(lineLIFFAppDuration).Local()
+		formattedExpireTime := GetFormatTime(expiredAt)
+		log.Printf("LIFF app expired at: %v", formattedExpireTime)
+		flexContent := GetDefaulTempLIFFBotMessage(
+			lineLIFFAddRes.LIFFID,
+			"看看他/她是誰?",
+			formattedExpireTime)
 		if _, err = bot.ReplyMessage(
 			replyToken,
-			linebot.NewTextMessage("找到"+accountID+"了~\n"+string(accountData))).Do(); err != nil {
+			linebot.NewTextMessage("找到"+accountID+"了~"),
+			linebot.NewFlexMessage("帳號連結: "+imgurUserLink, flexContent)).Do(); err != nil {
+			log.Print(err)
+		}
+		<-time.After(lineLIFFAppDuration) // Timer expired
+		if err := DeleteLIFFApp(lineLIFFAddRes.LIFFID); err != nil {
+			log.Print(err)
+		}
+	case "請問您要找的分類是?":
+		lastBotMessages = ""
+		//Get galleries from subreddit tag and send to reply message
+		tag := "cats"
+		if message.Text != "" {
+			tag = message.Text
+		}
+		imgurRes, err := imgurClient.GetSubredditGalleries(tag)
+		if err != nil {
+			log.Print(err)
+		}
+		if !imgurRes.Success {
+			if _, err = bot.ReplyMessage(
+				replyToken,
+				linebot.NewTextMessage("抱歉，找不到這個分類~:(")).Do(); err != nil {
+				log.Print(err)
+			}
+			break
+		}
+		accountData, err := json.MarshalIndent(imgurRes.Data, "", "\t")
+		if err != nil {
+			log.Print(err)
+		}
+		log.Println(string(accountData))
+		// Call Line API to get LIFF App or update it
+		imgurGalleriesLink := imgurGalleriesURLBase + tag
+		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgurGalleriesLink)
+		if err != nil {
+			log.Print(err)
+		}
+		flexContent := GetDefaulLIFFBotMessage(lineLIFFAddRes.LIFFID, "預覽分類圖庫")
+		if _, err = bot.ReplyMessage(
+			replyToken,
+			linebot.NewTextMessage("找到這個分類了~"),
+			linebot.NewFlexMessage("分類圖庫連結: "+imgurGalleriesLink, flexContent)).Do(); err != nil {
 			log.Print(err)
 		}
 	default:
@@ -122,7 +232,7 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 
 // ActionsOnImageMessage func, to do specific action depend on message received and the last bot sent image message.
 func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID string) {
-	log.Println("message.ID" + message.ID)
+	log.Println("message.ID: " + message.ID)
 	switch lastBotMessages {
 	case "請問您要上傳哪張圖片?":
 		lastBotMessages = ""
@@ -137,19 +247,19 @@ func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID str
 			log.Print(err)
 		}
 		log.Printf("imgContent's type: %T\n", imgContent)
-		imgUploadRes, err := imgurClient.AnonymousUploadByImgMessage(imgContent)
+		imgurRes, err := imgurClient.AnonymousUploadByImgMessage(imgContent)
 		if err != nil {
 			log.Print(err)
 		}
-		log.Printf("image upload success? %v", imgUploadRes.Success)
-		imgUploadData, err := json.MarshalIndent(imgUploadRes.Data, "", "\t")
+		log.Printf("image upload success? %v", imgurRes.Success)
+		imgUploadData, err := json.MarshalIndent(imgurRes.Data, "", "\t")
 		if err != nil {
 			log.Print(err)
 		}
 		log.Printf("image upload result: %s", string(imgUploadData))
 
 		// Call Line API to get LIFF URL
-		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgUploadRes.Data.Link)
+		lineLIFFAddRes, err := AddLIFFApp(linebot.LIFFViewTypeTall, imgurRes.Data.Link)
 		if err != nil {
 			log.Print(err)
 		}
@@ -159,11 +269,11 @@ func ActionsOnImageMessage(message *linebot.ImageMessage, replyToken, userID str
 		// when over 500 messages per month under FREE plan.
 		// So if you want to save money for your bot,
 		// sending multiple messages(up to 5) in 1 reply.
-		flexContent := GetImageUploadBotMessage(lineLIFFAddRes.LIFFID, imgUploadRes.Data.DeleteHash)
+		flexContent := GetImageUploadBotMessage(lineLIFFAddRes.LIFFID, imgurRes.Data.DeleteHash)
 		if _, err = bot.ReplyMessage(
 			replyToken,
-			linebot.NewTextMessage(imgUploadRes.Data.Link),
-			linebot.NewFlexMessage("您的圖片連結: "+imgUploadRes.Data.Link, flexContent)).Do(); err != nil {
+			linebot.NewTextMessage(imgurRes.Data.Link),
+			linebot.NewFlexMessage("您的圖片連結: "+imgurRes.Data.Link, flexContent)).Do(); err != nil {
 			log.Print(err)
 		}
 	default:
