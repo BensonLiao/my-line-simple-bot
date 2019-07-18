@@ -169,10 +169,12 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 			lineLIFFAddRes.LIFFID,
 			"看看他/她是誰?",
 			note)
+		HowToAccessOldWeb := "*imgur新版網頁如用手機瀏覽此頁面會強制回首頁，解法請參考 https://help.imgur.com/hc/en-us/articles/115002122443-Accessing-the-old-version-of-mobile-web"
 		if _, err = bot.ReplyMessage(
 			replyToken,
 			linebot.NewTextMessage("找到"+accountID+"了~"),
-			linebot.NewFlexMessage("帳號連結: "+imgurUserLink, flexContent)).Do(); err != nil {
+			linebot.NewFlexMessage("帳號連結: "+imgurUserLink, flexContent),
+			linebot.NewTextMessage(HowToAccessOldWeb)).Do(); err != nil {
 			log.Print(err)
 		}
 		<-time.After(lineLIFFAppDuration) // Timer expired
