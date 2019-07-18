@@ -45,8 +45,8 @@ func GetDefaultBotMessage(userMessage string) *linebot.BubbleContainer {
 	}
 }
 
-// GetDefaulTempLIFFBotMessage func
-func GetDefaulTempLIFFBotMessage(liffID, actionLabel, expireAt string) *linebot.BubbleContainer {
+// GetDefaultLIFFWithNoteBotMessage func
+func GetDefaultLIFFWithNoteBotMessage(liffID, actionLabel, note string) *linebot.BubbleContainer {
 	lineLIFFURLForImgurUser := lineLIFFURLBase + liffID
 	return &linebot.BubbleContainer{
 		Type: linebot.FlexContainerTypeBubble,
@@ -62,7 +62,7 @@ func GetDefaulTempLIFFBotMessage(liffID, actionLabel, expireAt string) *linebot.
 				},
 				&linebot.TextComponent{
 					Type: linebot.FlexComponentTypeText,
-					Text: "*預覽連結將於 " + expireAt + " 失效",
+					Text: note,
 					Wrap: true,
 				},
 			},
@@ -162,12 +162,13 @@ func ActionsOnTextMessage(message *linebot.TextMessage, replyToken, userID strin
 			log.Print(err)
 		}
 		expiredAt := time.Now().Add(lineLIFFAppDuration).Local()
-		formattedExpireTime := GetFormatTime(expiredAt)
-		log.Printf("LIFF app expired at: %v", formattedExpireTime)
-		flexContent := GetDefaulTempLIFFBotMessage(
+		expireAtTime := GetFormatTime(expiredAt)
+		log.Printf("LIFF app expired at: %v", expireAtTime)
+		note := "*預覽連結將於 " + expireAtTime + " 失效"
+		flexContent := GetDefaultLIFFWithNoteBotMessage(
 			lineLIFFAddRes.LIFFID,
 			"看看他/她是誰?",
-			formattedExpireTime)
+			note)
 		if _, err = bot.ReplyMessage(
 			replyToken,
 			linebot.NewTextMessage("找到"+accountID+"了~"),
