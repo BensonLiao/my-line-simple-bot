@@ -47,11 +47,9 @@ Press the button
 <a href="http://nav.cx/3tDhraO" target="_blank" rel="noopener noreferrer">
 <img src="https://scdn.line-apps.com/n/line_add_friends/btn/zh-Hant.png" alt="加入好友" height="36" border="0">
 </a>
-or scan the QRcode.
+or scan the QRcode:
 
-<div class="img_container">
-  ![my-line-bot](./static/my-line-bot.png)
-<div>
+<img src="static/my-line-bot.png" alt="reactToPost" width="360" height="360">
 
 ## Documentation
 
