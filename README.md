@@ -1,6 +1,11 @@
 # my-line-simple-bot
 
-A barebones Go app, which can easily be deployed to Heroku.
+A LINE bot server utilized with [liff-react-boilerplate](https://github.com/BensonLiao/liff-react-boilerplate) and
+[imgur-api-go-v3](https://github.com/BensonLiao/imgur-api-go-v3),
+User can chat with bot, upload image to imgur or search
+subreddit/account on imgur.com.
+
+Also a barebones Go app, which can easily be deployed to Heroku.
 
 This application supports the [Getting Started with Go on Heroku](https://devcenter.heroku.com/articles/getting-started-with-go) article - check it out.
 
@@ -25,7 +30,7 @@ github.com/heroku/my-line-simple-bot
 $ heroku local
 ```
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
+Your app should now be running on [localhost:8888](http://localhost:8888/).
 
 ## Deploying to Heroku
 
