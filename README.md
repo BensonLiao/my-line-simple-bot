@@ -32,6 +32,19 @@ $ heroku local
 
 Your app should now be running on [localhost:8888](http://localhost:8888/).
 
+**Note. server read and access variable like PORT from `.env`,
+usually put that in the project root.**
+
+For example:
+
+```
+LINEBOT_CHANNEL_SECRET=1234
+LINEBOT_CHANNEL_TOKEN=5678
+IMGUR_CLIENT_ID=1234
+IMGUR_CLIENT_SECRET=5678
+PORT=8888
+```
+
 ## Deploying to Heroku
 
 ```sh
